@@ -10,8 +10,8 @@ if __name__ == '__main__':
                                "bjetPt", "deltaPhiBjetMet", "TransverseMass"]
     preprocess_modes = ["MinMaxLogScale", "MinMaxLogScale", "MinMaxScale", "MinMaxScale",
                         "MinMaxScale", "MinMaxLogScale", "MinMaxScale", "MinMaxLogScale"]
-    print(dataframe.head())
-    print(dataframe.shape)
 
     preprocessor = Preprocessor(variables_to_preprocess, preprocess_modes)
-    dataframe_scaled = preprocessor.process(dataframe)
+    dataframe_scaled = preprocessor.process(dataframe.copy())
+    print(dataframe.head())
+    print(dataframe_scaled.head())

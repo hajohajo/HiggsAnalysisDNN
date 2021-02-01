@@ -27,15 +27,14 @@ class Preprocessor():
         :return: preprocessed pandas dataframe
         '''
         dataframe = self._clean_inputs(dataframe, ["ldgTrkPtFrac", "TransverseMass"], [0.0, 0.0], [1.0, None])
+        dataframe = self._abs_inputs(dataframe, ["deltaPhiTauMet", "deltaPhiTauBjet", "deltaPhiBjetMet"])
         if (self._mins == None or self._maxs == None):
             self._get_min_and_max_values(dataframe)
-        print(dataframe.head())
         for i, column in enumerate(self._variable_names):
             dataframe.loc[:, column] = self._scale(dataframe.loc[:, column],
                                                                         self._preprocessing_modes[i],
                                                                        self._mins[i],
                                                                        self._maxs[i])
-        print(dataframe.head())
         return dataframe
 
     def _get_min_and_max_values(self, dataframe):
@@ -62,9 +61,16 @@ class Preprocessor():
         if mode == "MinMaxScale":
             x = (x-min)/(max-min)
         elif mode == "MinMaxLogScale":
-            x = (np.log10(x-min+1.0))/np.log10(max-min+1.0)
+            x = (np.log10(x+1.0)-np.log10(min+1.0))/(np.log10(max+1.0)-np.log10(min+1.0))
+#            x = (np.log10(x-min+1.0))/np.log10(max-min+1.0)
         elif mode == "StandardScale":
             raise NotImplementedError("StandardScale not yet implemented")
         elif mode == "StandardLogScale":
             raise NotImplementedError("StandardLogScale not yet implemented")
         return x
+
+    def _abs_inputs(self, dataframe, columns):
+        for column in columns:
+            print(column)
+            dataframe.loc[:, column] = dataframe.loc[:, column].abs()
+        return dataframe

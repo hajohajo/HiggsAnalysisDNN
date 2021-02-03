@@ -24,11 +24,7 @@ if __name__ == '__main__':
     preprocessor = Preprocessor(training_variables, preprocess_modes)
     dataframe_scaled = preprocessor.process(dataframe.copy())
 
-    print(dataframe_scaled.min())
-    print(dataframe_scaled.max())
-    sys.exit(1)
-
-    classifier = Classifier(8, neurons=8192, layers=5, lr=3e-4, regularizer_magnitude=1e-4, disco_factor=10.0)
+    classifier = Classifier(8, neurons=8192, layers=5, lr=3e-4, disco_factor=10.0)
     model = classifier.get_model()
     print(model.summary())
 

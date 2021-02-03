@@ -4,10 +4,11 @@ from NeuralNetwork import Classifier
 import tensorflow as tf
 import numpy as np
 import pandas as pd
+import sys
 pd.set_option('display.max_columns', None)
 
-#from tensorflow.keras import mixed_precision
-#mixed_precision.set_global_policy('mixed_float16')
+from tensorflow.keras import mixed_precision
+mixed_precision.set_global_policy('mixed_float16')
 
 if __name__ == '__main__':
     tf.random.set_seed(1337)
@@ -18,12 +19,16 @@ if __name__ == '__main__':
     training_variables = ["MET", "tauPt", "ldgTrkPtFrac", "deltaPhiTauMet", "deltaPhiTauBjet",
                                "bjetPt", "deltaPhiBjetMet", "TransverseMass"]
     preprocess_modes = ["MinMaxScale", "MinMaxScale", "MinMaxScale", "MinMaxScale",
-                        "MinMaxScale", "MinMaxLogScale", "MinMaxScale", "MinMaxScale"]
+                        "MinMaxScale", "MinMaxScale", "MinMaxScale", "MinMaxScale"]
 
     preprocessor = Preprocessor(training_variables, preprocess_modes)
     dataframe_scaled = preprocessor.process(dataframe.copy())
 
-    classifier = Classifier(8, neurons=1024, lr=3e-4, regularizer_magnitude=1e-4)
+    print(dataframe_scaled.min())
+    print(dataframe_scaled.max())
+    sys.exit(1)
+
+    classifier = Classifier(8, neurons=8192, layers=5, lr=3e-4, regularizer_magnitude=1e-4, disco_factor=10.0)
     model = classifier.get_model()
     print(model.summary())
 
@@ -33,17 +38,18 @@ if __name__ == '__main__':
     signal = signal.sample(n=background.shape[0])
     training_frame = signal.append(background)
     training_frame = training_frame.sample(frac=1.0)
+    training_frame.astype('float16')
 
     disco_targets = np.column_stack([(training_frame.loc[:, "event_id"] == 0),
                                     training_frame.loc[:, "TransverseMass"],
                                     2*(training_frame.loc[:, "event_id"] != 0)])
 
     model.fit(
-#        {'input_layer': training_frame.loc[:, training_variables], 'label': disco_targets},
         training_frame.loc[:, training_variables],
-        (training_frame.loc[:, "event_id"] == 0),
+        # (training_frame.loc[:, "event_id"] == 0),
+        disco_targets,
         epochs=10,
-        batch_size=int(1024),
+        batch_size=int(2048),
         validation_split=0.1
     )
 

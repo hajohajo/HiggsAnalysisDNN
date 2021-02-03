@@ -16,7 +16,8 @@ class Classifier():
                  optimizer='adam',
                  lr=1e-4,
                  layers=3,
-                 init_bias=0.5):
+                 init_bias=0.5,
+                 disco_factor=10.0):
         self._n_inputs = n_inputs
         self._neurons = neurons
         self._activation = activation
@@ -25,6 +26,7 @@ class Classifier():
         self._lr = lr
         self._layers = layers
         self._init_bias = init_bias
+        self._disco_factor = disco_factor
 
     def get_model(self):
         try:
@@ -37,26 +39,33 @@ class Classifier():
             ValueError("Use 'adam' optimizer instead")
         _initializer = 'lecun_normal'
 
-        input_layer = layers.Input(self._n_inputs, name="input_layer")
+        # input_layer = layers.Input(self._n_inputs, name="input_layer")
+        # dense_1 = layers.Dense(4096, activation=self._activation, kernel_initializer=_initializer)(input_layer)
+        # x = layers.Dense(2048, activation=self._activation, kernel_initializer=_initializer)(dense_1)
+        # x = layers.Dense(1024, activation=self._activation, kernel_initializer=_initializer)(x)
+        # x = layers.Dense(512, activation=self._activation, kernel_initializer=_initializer)(x)
+
+        input_layer = layers.Input(self._n_inputs, dtype=tf.float16, name="input_layer")
         x = input_layer
         for i in range(self._layers):
             x = layers.Dense(int(self._neurons/pow(2,i)),
                              activation=self._activation,
                              kernel_initializer=_initializer,
-                             activity_regularizer=l2(self._regularizer_magnitude),
+     #                        activity_regularizer=l2(self._regularizer_magnitude),
                              name="dense_{}".format((i+1)))(x)
-#            x = layers.BatchNormalization(name="batchnorm_{}".format((i+1)))(x)
-
+            x = layers.BatchNormalization(name="batchnorm_{}".format((i+1)))(x)
+#
         output_layer = layers.Dense(1, activation='sigmoid',
                                     kernel_initializer=_initializer,
                                     bias_initializer=Constant(self._init_bias))(x)
 
-        x = layers.Dense(1, kernel_initializer=_initializer,bias_initializer=Constant(self._init_bias), name="out_dense")(x)
-        output_layer = layers.Activation('sigmoid', dtype=tf.float32, name='predictions')(x)
+        # x = layers.Dense(1, kernel_initializer=_initializer,bias_initializer=Constant(self._init_bias), name="out_dense")(x)
+        # output_layer = layers.Activation('sigmoid', dtype=tf.float32, name='predictions')(x)
 
         model = Model(input_layer, output_layer)
-        loss = DiscoLoss(factor=0.0)
+        loss = DiscoLoss(factor=self._disco_factor)
         model.compile(optimizer=LossScaleOptimizer(_optimizer),
-                      loss='binary_crossentropy')#loss)
+#                      loss='binary_crossentropy')
+                      loss=loss)
         return model
 

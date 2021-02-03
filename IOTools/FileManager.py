@@ -30,7 +30,7 @@ class FileManager():
         for dataset_name in EventTypeDict.keys():
             df = self._read_dataset_folder(dataset_name)
 #            df = self._add_normalization_weights(df, dataset_name)
-#            df = self._add_event_type_id(df, dataset_name)
+            df = self._add_event_type_id(df, dataset_name)
             dataframes.append(df)
 
         concatenated_dataframe = dataframes[0].append(dataframes[1:])
@@ -45,7 +45,10 @@ class FileManager():
 
 
     def _add_normalization_weights(self, dataframe, dataset_name):
-        xsec = XSecDict[dataset_name]
+        if dataset_name != 'ChargedHiggs_':
+            xsec = XSecDict[dataset_name]
+        else:
+            xsec = 1.0
         n_entries = len(dataframe)
         dataframe.loc["event_weight"] = xsec/n_entries
         return dataframe

@@ -26,22 +26,28 @@ class Preprocessor():
         :param dataframe: input pandas dataframe
         :return: preprocessed pandas dataframe
         '''
+        abs_scale = ["deltaPhiTauMet", "deltaPhiTauBjet", "deltaPhiBjetMet"]
         dataframe = self._clean_inputs(dataframe, ["ldgTrkPtFrac", "TransverseMass"], [0.0, 0.0], [1.0, None])
         dataframe = self._abs_inputs(dataframe, ["deltaPhiTauMet", "deltaPhiTauBjet", "deltaPhiBjetMet"])
+
         if (self._mins == None or self._maxs == None):
             self._get_min_and_max_values(dataframe)
+        print(self._mins)
+        print(self._maxs)
         for i, column in enumerate(self._variable_names):
             dataframe.loc[:, column] = self._scale(dataframe.loc[:, column],
                                                                         self._preprocessing_modes[i],
                                                                        self._mins[i],
                                                                        self._maxs[i])
+        print(dataframe.min(axis=0))
+        print(dataframe.max(axis=0))
         return dataframe
 
     def _get_min_and_max_values(self, dataframe):
-        _mins = dataframe.loc[:, self._variable_names].apply(np.min, axis=0, raw=True).to_numpy()
-        _maxs = dataframe.loc[:, self._variable_names].apply(np.max, axis=0, raw=True).to_numpy()
-        self._mins = _mins
-        self._maxs = _maxs
+        _mins = dataframe.min(axis=0) #dataframe.loc[:, self._variable_names].apply(np.min, axis=0, raw=True).to_numpy()
+        _maxs = dataframe.max(axis=0) #dataframe.loc[:, self._variable_names].apply(np.max, axis=0, raw=True).to_numpy()
+        self._mins = _mins.to_numpy()
+        self._maxs = _maxs.to_numpy()
 
     def _clean_inputs(self, dataframe, inputs_to_clip, mins, maxs):
         '''
@@ -61,8 +67,7 @@ class Preprocessor():
         if mode == "MinMaxScale":
             x = (x-min)/(max-min)
         elif mode == "MinMaxLogScale":
-            x = (np.log10(x+1.0)-np.log10(min+1.0))/(np.log10(max+1.0)-np.log10(min+1.0))
-#            x = (np.log10(x-min+1.0))/np.log10(max-min+1.0)
+            x = np.log1p(x-min)/np.log1p(max-min)
         elif mode == "StandardScale":
             raise NotImplementedError("StandardScale not yet implemented")
         elif mode == "StandardLogScale":
@@ -71,6 +76,5 @@ class Preprocessor():
 
     def _abs_inputs(self, dataframe, columns):
         for column in columns:
-            print(column)
             dataframe.loc[:, column] = dataframe.loc[:, column].abs()
         return dataframe

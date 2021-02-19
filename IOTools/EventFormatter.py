@@ -46,4 +46,5 @@ class EventFormatter():
             df["met"] = np.sqrt(np.square(df["MET_Type1_x"].values)+np.square(df["MET_Type1_y"].values))
             df["l1met"] = np.sqrt(np.square(df["L1MET_pat_x"].values)+np.square(df["L1MET_pat_y"].values))
             df["met_phi"] = np.arctan2(df["MET_Type1_x"].values, df["MET_Type1_y"].values)
-            df["met_passed_filters"] =
+            df["met_passed_filters"] = array["met_passed_filters"] = array["METFilter_hbheNoiseTokenRun2Loose"] & array["METFilter_Flag_HBHENoiseFilter"] & array["METFilter_Flag_HBHENoiseIsoFilter"] &array["METFilter_Flag_EcalDeadCellTriggerPrimitiveFilter"] & array["METFilter_Flag_eeBadScFilter"] & array["METFilter_Flag_goodVertices"] & array["METFilter_Flag_globalTightHalo2016Filter"] & array["METFilter_badPFMuonFilter"] & array["METFilter_badChargedCandidateFilter"]
+

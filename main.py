@@ -1,4 +1,4 @@
-from IOTools import FileManager, Preprocessor
+from IOTools import FileManager, Preprocessor, EventFormatter
 from NeuralNetwork import Classifier
 from Plotting import Plotter
 
@@ -13,6 +13,11 @@ mixed_precision.set_global_policy('mixed_float16')
 
 if __name__ == '__main__':
     tf.random.set_seed(1337)
+
+    formatter = EventFormatter()
+    path = "/media/joona/2TB_store/multicrab_SignalAnalysis_v8030_20180508T1342/TT/results/histograms-TT-6.root"
+    formatter.format_file(path)
+    sys.exit(1)
     train_on_odd = True
     path_to_training_data = "/home/joona/Documents/TrainingFiles3"
     filemanager = FileManager(path_to_training_data, "Events")

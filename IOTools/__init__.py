@@ -1,2 +1,3 @@
 from IOTools.FileManager import FileManager
 from IOTools.Preprocessor import Preprocessor
+from IOTools.EventFormatter import EventFormatter

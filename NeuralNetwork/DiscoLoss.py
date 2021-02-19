@@ -21,8 +21,11 @@ class DiscoLoss(Loss):
         dc_mt = tf.reshape(mt, [tf.size(mt)])
         dc_weights = tf.cast(tf.reshape(sample_weights, [tf.size(sample_weights)]), y_pred.dtype)
 
-        custom_loss = tf.losses.binary_crossentropy(y_true, y_pred, label_smoothing=0.0) \
-                            + self.factor * distance_corr(dc_mt, dc_pred, normedweight=dc_weights, power=1)
+        if self.factor == 0.0:
+            custom_loss = tf.losses.binary_crossentropy(y_true, y_pred, label_smoothing=0.0)
+        else:
+            custom_loss = tf.losses.binary_crossentropy(y_true, y_pred, label_smoothing=0.0) \
+                                + self.factor * distance_corr(dc_mt, dc_pred, normedweight=dc_weights, power=1)
 
         return custom_loss
 

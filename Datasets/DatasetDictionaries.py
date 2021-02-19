@@ -1,3 +1,21 @@
+import numpy as np
+
+BinningDict = {
+#    "mt": np.linspace(0.0, 1000.0, 51),
+#    "mt": np.array(np.linspace(0.0, 400.0, 21).tolist() + [500.0, 1000.0, 3000.0]),
+    "mt": np.logspace(0.0, 3.3, 10),
+    "MET": np.linspace(0.0, 1000.0, 51),
+}
+
+InvertedEventTypeDict = {
+    0: "Signal",
+    1: "TT",
+    2: "DY",
+    3: "QCD",
+    4: "ST",
+    5: "WJets",
+    6: "Diboson"
+}
 
 EventTypeDict = {
     "ChargedHiggs_": 0,

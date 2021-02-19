@@ -27,15 +27,18 @@ class Preprocessor():
         :return: preprocessed pandas dataframe
         '''
         log_scale = ["MET", "tauPt", "bjetPt", "TransverseMass"]
+
         #variables with weird values outside of range
         dataframe = self._clean_inputs(dataframe, ["ldgTrkPtFrac", "TransverseMass"], [0.0, 0.0], [1.0, None])
+
         dataframe = self._abs_inputs(dataframe, self._variable_names)
         dataframe.loc[:, log_scale] = np.log1p(dataframe.loc[:, log_scale])
-        self._mins = dataframe.min(axis=0).to_numpy()
-        self._maxs = dataframe.max(axis=0).to_numpy()
+        if (self._mins is None and self._maxs is None):
+            self._mins = dataframe.loc[:, self._variable_names].min(axis=0).to_numpy()
+            self._maxs = dataframe.loc[:, self._variable_names].max(axis=0).to_numpy()
 
-        dataframe = dataframe.subtract(self._mins)
-        dataframe = dataframe.divide((self._maxs-self._mins))
+        dataframe.loc[:, self._variable_names] = dataframe.loc[:, self._variable_names].subtract(self._mins)
+        dataframe.loc[:, self._variable_names] = dataframe.loc[:, self._variable_names].divide((self._maxs-self._mins))
         return dataframe
 
     def _clean_inputs(self, dataframe, inputs_to_clip, mins, maxs):
@@ -54,7 +57,7 @@ class Preprocessor():
 
     def _scale(self, x, mode, min, max):
         if mode == "MinMaxScale":
-            x = (x-min)/(max-min)
+            x = 2.0*(x-min)/(max-min) - 1.0
         elif mode == "MinMaxLogScale":
             raise NotImplementedError("MinMaxLog not yet implemented")
         elif mode == "StandardScale":

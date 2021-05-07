@@ -9,7 +9,7 @@ class DiscoLoss(Loss):
     '''
     def __init__(self, factor=15.0, reduction=losses_utils.ReductionV2.AUTO, name="DiscoLoss"):
         super().__init__(reduction=reduction, name=name)
-        self.factor = factor
+        self.factor = tf.convert_to_tensor(factor)
 
     def call(self, y_true, y_pred):
         y_pred = tf.convert_to_tensor(y_pred)
@@ -21,11 +21,18 @@ class DiscoLoss(Loss):
         dc_mt = tf.reshape(mt, [tf.size(mt)])
         dc_weights = tf.cast(tf.reshape(sample_weights, [tf.size(sample_weights)]), y_pred.dtype)
 
-        if self.factor == 0.0:
-            custom_loss = tf.losses.binary_crossentropy(y_true, y_pred, label_smoothing=0.0)
-        else:
-            custom_loss = tf.losses.binary_crossentropy(y_true, y_pred, label_smoothing=0.0) \
-                                + self.factor * distance_corr(dc_mt, dc_pred, normedweight=dc_weights, power=1)
+        custom_loss = tf.losses.binary_crossentropy(y_true, y_pred, label_smoothing=0.0) \
+                      + self.factor * distance_corr(dc_mt, dc_pred, normedweight=dc_weights, power=1)
+
+#        ver_loss = tf.losses.binary_crossentropy(y_true, y_pred, label_smoothing=0.0)
+
+ #       print("Losspair")
+
+        # if self.factor == 0.0:
+        #     custom_loss = tf.losses.binary_crossentropy(y_true, y_pred, label_smoothing=0.0)
+        # else:
+        #     custom_loss = tf.losses.binary_crossentropy(y_true, y_pred, label_smoothing=0.0) \
+        #                         + self.factor * distance_corr(dc_mt, dc_pred, normedweight=dc_weights, power=1)
 
         return custom_loss
 

@@ -2,13 +2,15 @@ from tensorflow.keras import layers
 from tensorflow.keras import optimizers
 from tensorflow.keras import Model
 from tensorflow.keras.initializers import Constant
-from NeuralNetwork import DiscoLoss, CustomAUC, DiscoMetric
+from NeuralNetwork import DiscoLoss, CustomAUC, DiscoMetric, InputSanitizerLayer
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import LossScaleOptimizer
 
 class Classifier():
     def __init__(self,
                  n_inputs,
+                 min_values,
+                 max_values,
                  neurons=128,
                  activation='relu',
                  regularizer_magnitude=1e-5,
@@ -17,6 +19,8 @@ class Classifier():
                  layers=3,
                  init_bias=0.5,
                  disco_factor=10.0):
+        self._min_values = min_values
+        self._max_values = max_values
         self._n_inputs = n_inputs
         self._neurons = neurons
         self._activation = activation
@@ -26,6 +30,16 @@ class Classifier():
         self._layers = layers
         self._init_bias = init_bias
         self._disco_factor = disco_factor
+
+    def get_scaler(self):
+        # input_layer = layers.Input(self._n_inputs, dtype=tf.float32, name="input_layer")
+        x = InputSanitizerLayer.InputSanitizerLayer(self._min_values, self._max_values)#(input_layer)
+        # model = Model(input_layer, x)
+        # _optimizer = optimizers.Adam(lr=self._lr, amsgrad=True)
+        # model.compile(optimizer=LossScaleOptimizer(_optimizer),
+        #               metrics=[CustomAUC(), DiscoMetric()],
+        #               loss='mae')
+        return x
 
     def get_model(self):
         try:
@@ -39,7 +53,7 @@ class Classifier():
         _initializer = 'lecun_normal'
 
         input_layer = layers.Input(self._n_inputs, dtype=tf.float32, name="input_layer")
-        x = input_layer
+        x = InputSanitizerLayer.InputSanitizerLayer(self._min_values, self._max_values)(input_layer)
         for i in range(self._layers):
             x = layers.Dense(max(int(self._neurons/pow(2, i)), 32),
                              activation=self._activation,

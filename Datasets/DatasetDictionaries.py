@@ -14,7 +14,8 @@ InvertedEventTypeDict = {
     3: "QCD",
     4: "ST",
     5: "WJets",
-    6: "Diboson"
+    6: "Diboson",
+    99: "All"
 }
 
 EventTypeDict = {

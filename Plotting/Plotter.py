@@ -44,16 +44,16 @@ EventClassColors = {
     3: sns.xkcd_rgb['purple'],
     4: sns.xkcd_rgb['blue grey'],
     5: sns.xkcd_rgb['bright red'],
-    6: sns.xkcd_rgb['teal']
+    6: sns.xkcd_rgb['teal'],
+    99: sns.xkcd_rgb['hunter green']
 
 }
 
 
 from Datasets import EventTypeDict, InvertedEventTypeDict, BinningDict
 class Plotter():
-    def __init__(self, dataset, scaled_dataset, history):
+    def __init__(self, dataset, history):
         self._dataset = dataset
-        self._scaled_dataset = scaled_dataset
         self._history = history
 
     def output_distribution(self):
@@ -116,6 +116,8 @@ class Plotter():
         classes = InvertedEventTypeDict.keys()
         for _class in classes:
             if _class == 0:
+                indices = self._dataset.loc[:, "event_id"] == 0
+            elif _class == 99:
                 indices = self._dataset.loc[:, "event_id"] != 0
             else:
                 indices = self._dataset.loc[:, "event_id"] == _class

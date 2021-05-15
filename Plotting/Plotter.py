@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 from scipy.stats import norm
 from scipy.interpolate import interp1d
 from matplotlib import pyplot as plt
@@ -55,6 +56,51 @@ class Plotter():
     def __init__(self, dataset, history):
         self._dataset = dataset
         self._history = history
+
+    def compareDnns(self, paths_to_models, training_variables, list_of_labels):
+        model_predictions = []
+        for path in paths_to_models:
+            model = tf.keras.models.load_model(path, compile=False)
+            predictions = model.predict(self._dataset[training_variables], batch_size=1024)
+            model_predictions.append(predictions)
+
+        mt = self._dataset["TransverseMass"]
+        signal_indices = self._dataset.loc[:, "event_id"] == 0
+        binning_ = BinningDict["mt"]
+        self.comparisonXvsY(model_predictions, mt, binning_, signal_indices, [EventClassColors[2], EventClassColors[3]], list_of_labels)
+
+    def comparisonXvsY(self, list_of_ys, x_values, binning, signal_indices, list_of_colors, list_of_labels):
+        fig, (ax_0, ax_1) = plt.subplots(nrows=2, ncols=1, sharex=True, gridspec_kw={'height_ratios': [2, 1]},
+                                         figsize=(6, 8))
+        bin_centers = binning[:-1] + (binning[1:] - binning[:-1]) / 2.0
+        for j, entry in enumerate(list_of_ys):
+            signal_y = entry[signal_indices]
+            bkg_y = entry[~signal_indices]
+            signal_x = x_values[signal_indices]
+
+            sig_bin_means = -np.ones(len(bin_centers))
+            sig_bin_std = np.zeros(len(bin_centers))
+
+            sig_indices = np.digitize(signal_x, binning)
+            sig_indices[sig_indices==0] = 1
+
+            sig_indices[sig_indices==len(binning)] = len(binning)-1
+            sig_indices = sig_indices - 1
+
+            for i in np.unique(sig_indices):
+                sig_bin_means[i], sig_bin_std[i] = norm.fit(signal_y[sig_indices == i])
+
+            sig_up = np.add(sig_bin_means, sig_bin_std/2.0)
+            sig_down = np.add(sig_bin_means, -sig_bin_std/2.0)
+
+            sig_up = np.clip(sig_up, 0.0, 1.0)
+            sig_down = np.clip(sig_down, 0.0, 1.0)
+            self._plot_class(sig_bin_means, sig_up, sig_down, bin_centers, binning, ax_0, list_of_colors[j], list_of_labels[j])
+
+        ax_0.set_ylabel("Mean DNN output")
+        ax_0.set_xscale('log')
+        ax_0.set_xlim(binning[1], binning[-1])
+        plt.savefig("plots/compare_dnns.pdf")
 
     def output_distribution(self):
         fig, (ax_0, ax_1) = plt.subplots(nrows=2, ncols=1, sharex=True, gridspec_kw={'height_ratios': [2, 1]},

@@ -40,6 +40,7 @@ if __name__ == '__main__':
     # df = pd.concat(test_reads, axis=0)
  #   sys.exit(1)
     train_on_odd = True
+    only_make_comparisons = True
 #    path_to_training_data = "/home/joona/Documents/preprocessed_HiggsTrainingSets_TEST"
     path_to_training_data = "/home/joona/Documents/TrainingFiles3"
     filemanager = FileManager(path_to_training_data, "Events", path_to_test_data="/home/joona/Documents/TrainingFiles3")
@@ -51,7 +52,10 @@ if __name__ == '__main__':
     test_signal = test_signal[signal_mass_range_indices]
     masses = np.unique(test_signal.loc[:, "true_mass"].values)
     test_background = test_dataframe.loc[~test_is_signal, :]
+
     entries = min(test_signal.shape[0], test_background.shape[0])
+    entries = 4000
+
     test_signal = test_signal.sample(n=entries)
     test_background = test_background.sample(n=entries)
     test_dataframe = test_signal.append(test_background)
@@ -67,6 +71,16 @@ if __name__ == '__main__':
                                "MET", "tauPt", "bjetPt", "TransverseMass", "true_mass"]
     preprocess_modes = ["MinMaxScale", "MinMaxScale", "MinMaxScale", "MinMaxScale",
                         "MinMaxScale", "MinMaxScale", "MinMaxScale", "MinMaxScale", "MinMaxScale"]
+
+    if only_make_comparisons:
+        dnns = ["model_for_even", "model_for_odds"]
+        labels = ["even", "odd"]
+        paths_to_dnn = ["./SavedModels/" + x for x in dnns]
+        plotter = Plotter(test_dataframe, None)
+        plotter.compareDnns(paths_to_dnn, training_variables, labels)
+        sys.exit(0)
+
+
     # training_variables = ["ldgTrkPtFrac", "deltaPhiBjetMet", "deltaPhiTauMet", "deltaPhiTauBjet",
     #                            "MET", "tauPt", "bjetPt", "TransverseMass"]
     # preprocess_modes = ["MinMaxScale", "MinMaxScale", "MinMaxScale", "MinMaxScale",
@@ -113,7 +127,7 @@ if __name__ == '__main__':
                             neurons=1024,
                             layers=4,
                             lr=3e-4,
-                            disco_factor=150.0,
+                            disco_factor=800.0,
                             activation="swish") #80
 
     scaler = classifier.get_scaler()
@@ -134,7 +148,7 @@ if __name__ == '__main__':
 
 
     def scheduler(epoch, lr):
-        if epoch < 400:
+        if epoch < 35:#400:
             return lr
         else:
             return lr * tf.math.exp(-0.1)
@@ -151,9 +165,9 @@ if __name__ == '__main__':
         training_frame.loc[:, training_variables],
         disco_targets,
 #        sample_weight=training_frame.loc[:, "event_weight"],
-        epochs=450,
+        epochs=50,#450,
         callbacks=[callback],
-        batch_size=int(8192),
+        batch_size=2048,#int(8192),
         validation_data=(validation_frame.loc[:, training_variables], validation_targets)
     )
 
